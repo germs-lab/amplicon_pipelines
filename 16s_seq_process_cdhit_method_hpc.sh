@@ -27,62 +27,62 @@ module load Java/1.7.0_51
 module load CDHIT/4.6.1
 module load R/2.15.1
 
-# 1. create a list of sample names. find the sample name shared between R1 and R2.
-cd $DIR/original
-ls *.fastq* > ../raw_seq_list.txt
-
-cd $DIR
-rev raw_seq_list.txt | cut -d $FN_DELIM -f "$FN_REV_INDEX"- | rev | sort | uniq > sample_names.txt
-
-## check:
-num_files=`wc -l raw_seq_list.txt | grep -o "[0-9]\+"`
-num_samples=`wc -l sample_names.txt | grep -o "[0-9]\+"`
-
-if [ $num_samples -eq $((num_files / 2)) ]
-then
-        echo "OK: sample names parsed"
-else
-        echo "Number of pair-ended sequence files does not match the number of sample names. Please check"
-fi
-
-# 2. assemble pair-ended readsi using RDP pandaseq.
-cd $DIR
-mkdir $DIR/1_rdp_pandaseq
-cd 1_rdp_pandaseq
-mkdir assembled stats
-
-while read i 
-do 
-	$RDP/RDP_misc_tools/pandaseq/pandaseq -N -o $OVERLAP -e $Q -F -d rbfkms -l $MINLEN -L $MAXLEN -f $DIR/original/"$i""$FN_DELIM"R1"$FN_END" -r  $DIR/original/"$i""$FN_DELIM"R2"$FN_END" 1> assembled/"$i"_250-280.fastq 2> stats/"$i"_assembled_stats.txt
-done < $DIR/sample_names.txt
-
-num_assembled=`ls assembled/*.fastq | wc -l | grep -o "[0-9]\+"`
-if [ $num_assembled -eq $num_samples ]
-then 
-	echo "OK: assembled"
-else
-	echo "Number of samples assembled does not match the number of samples. Please check"
-fi
-
-# 3. check sequence quality.
-cd $DIR
-mkdir $DIR/2_quality_check
-cd 2_quality_check/
-mkdir temp fastq_q25 fasta_q25 chimera_removal final_good_seqs
-
-## checking sequence quality using seqfilters
-cd $DIR/1_rdp_pandaseq/assembled
-for i in *.fastq
-do 
-	java -jar $RDP/RDPTools/SeqFilters.jar -Q $Q -s $i -o $DIR/2_quality_check/temp/ -O $i.q25
-done
-## get quality filtered sequences and delete the temp folder
-cd $DIR/2_quality_check/temp
-for i in *.q25 
-do 
-	mv $i/NoTag/NoTag_trimmed.fastq ../fastq_q25/${i//.fastq.q25/.q25}.fq
-done
-#rm -r $DIR/2_quality_check/temp
+## 1. create a list of sample names. find the sample name shared between R1 and R2.
+#cd $DIR/original
+#ls *.fastq* > ../raw_seq_list.txt
+#
+#cd $DIR
+#rev raw_seq_list.txt | cut -d $FN_DELIM -f "$FN_REV_INDEX"- | rev | sort | uniq > sample_names.txt
+#
+### check:
+#num_files=`wc -l raw_seq_list.txt | grep -o "[0-9]\+"`
+#num_samples=`wc -l sample_names.txt | grep -o "[0-9]\+"`
+#
+#if [ $num_samples -eq $((num_files / 2)) ]
+#then
+#        echo "OK: sample names parsed"
+#else
+#        echo "Number of pair-ended sequence files does not match the number of sample names. Please check"
+#fi
+#
+## 2. assemble pair-ended readsi using RDP pandaseq.
+#cd $DIR
+#mkdir $DIR/1_rdp_pandaseq
+#cd 1_rdp_pandaseq
+#mkdir assembled stats
+#
+#while read i 
+#do 
+#	$RDP/RDP_misc_tools/pandaseq/pandaseq -N -o $OVERLAP -e $Q -F -d rbfkms -l $MINLEN -L $MAXLEN -f $DIR/original/"$i""$FN_DELIM"R1"$FN_END" -r  $DIR/original/"$i""$FN_DELIM"R2"$FN_END" 1> assembled/"$i"_250-280.fastq 2> stats/"$i"_assembled_stats.txt
+#done < $DIR/sample_names.txt
+#
+#num_assembled=`ls assembled/*.fastq | wc -l | grep -o "[0-9]\+"`
+#if [ $num_assembled -eq $num_samples ]
+#then 
+#	echo "OK: assembled"
+#else
+#	echo "Number of samples assembled does not match the number of samples. Please check"
+#fi
+#
+## 3. check sequence quality.
+#cd $DIR
+#mkdir $DIR/2_quality_check
+#cd 2_quality_check/
+#mkdir temp fastq_q25 fasta_q25 chimera_removal final_good_seqs
+#
+### checking sequence quality using seqfilters
+#cd $DIR/1_rdp_pandaseq/assembled
+#for i in *.fastq
+#do 
+#	java -jar $RDP/RDPTools/SeqFilters.jar -Q $Q -s $i -o $DIR/2_quality_check/temp/ -O $i.q25
+#done
+### get quality filtered sequences and delete the temp folder
+#cd $DIR/2_quality_check/temp
+#for i in *.q25 
+#do 
+#	mv $i/NoTag/NoTag_trimmed.fastq ../fastq_q25/${i//.fastq.q25/.q25}.fq
+#done
+##rm -r $DIR/2_quality_check/temp
 ## convert fastq files to fasta files to be used for chimera checking
 cd $DIR/2_quality_check/fastq_q25 
 for i in *.fq 
