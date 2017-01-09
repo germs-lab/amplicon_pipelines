@@ -23,10 +23,10 @@ Q="25"
 MINLEN="250"
 MAXLEN="280"
 
-module load Java/1.7.0_51
-module load CDHIT/4.6.1
-module load R/2.15.1
-
+#module load Java/1.7.0_51
+#module load CDHIT/4.6.1
+#module load R/2.15.1
+#
 ## 1. create a list of sample names. find the sample name shared between R1 and R2.
 #cd $DIR/original
 #ls *.fastq* > ../raw_seq_list.txt
@@ -84,31 +84,36 @@ module load R/2.15.1
 #done
 ##rm -r $DIR/2_quality_check/temp
 ## convert fastq files to fasta files to be used for chimera checking
-cd $DIR/2_quality_check/fastq_q25 
-for i in *.fq 
-do 
-	python $CODE/fastq_to_fasta.py $i ../fasta_q25/${i//.fq/}.fa
-done
-## check for chimeras using uclust 64 bit version
-cd ../fasta_q25
-### combine all good quality sequences
-cat *.fa >> ../chimera_removal/all_combined_q25.fa
+#cd $DIR/2_quality_check/fastq_q25 
+#for i in *.fq 
+#do 
+#	python $CODE/fastq_to_fasta.py $i ../fasta_q25/${i//.fq/}.fa
+#done
+# check for chimeras using uclust, per file then combine
+cd $DIR/2_quality_check
+cd $DIR/2_quality_check/fasta_q25
 
-cd ../chimera_removal
-### derep all sequences
-$RDP/thirdParty/usearch8.1.1831_i86linux64 -derep_fulllength all_combined_q25.fa -fastaout all_combined_q25_unique.fa -sizeout
-### sort by abundance and exclude singletons
-$RDP/thirdParty/usearch8.1.1831_i86linux64 -sortbysize all_combined_q25_unique.fa -fastaout all_combined_q25_sorted.fa -minsize 2
-### de novo chimera check using -cluster_otus option. `-id` indicates radius, therefore for 0.97 similarity to centroid, one should use 0.985. 
-$RDP/thirdParty/usearch8.1.1831_i86linux64 -cluster_otus all_combined_q25_sorted.fa -id 0.985 -otus all_combined_q25_chim_denovo.fa
-### reference based chimera removal using rdp full set
-$RDP/thirdParty/usearch8.1.1831_i86linux64 -uchime_ref all_combined_q25_chim_denovo.fa -db $CHIMERA_DB -strand plus -chimeras all_combined_q25_chim_denovo_ref_fullrdp.chimeras -nonchimeras all_combined_q25_chim_denovo_ref_fullrdp_good.fa
+bash $CODE/chimera_removal_pipeline.sh
+###### check for chimeras using uclust 64 bit version
+####cd ../fasta_q25
+####### combine all good quality sequences
+####cat *.fa >> ../chimera_removal/all_combined_q25.fa
+####
+###cd $DIR/2_quality_check/chimera_removal
+####### derep all sequences
+####$RDP/thirdParty/usearch8.1.1831_i86linux64 -derep_fulllength all_combined_q25.fa -fastaout all_combined_q25_unique.fa -sizeout
+####### sort by abundance and exclude singletons
+####$RDP/thirdParty/usearch8.1.1831_i86linux64 -sortbysize all_combined_q25_unique.fa -fastaout all_combined_q25_sorted.fa -minsize 2
+###### de novo chimera check using -cluster_otus option. `-id` indicates radius, therefore for 0.97 similarity to centroid, one should use 0.985. 
+###$RDP/thirdParty/usearch8.1.1831_i86linux64 -cluster_otus all_combined_q25_sorted.fa -id 0.985 -otus all_combined_q25_chim_denovo.fa -threads 
+###### reference based chimera removal using rdp full set
+###$RDP/thirdParty/usearch8.1.1831_i86linux64 -uchime_ref all_combined_q25_chim_denovo.fa -db $CHIMERA_DB -strand plus -chimeras all_combined_q25_chim_denovo_ref_fullrdp.chimeras -nonchimeras all_combined_q25_chim_denovo_ref_fullrdp_good.fa
 
 ### mapping quality trimmed sequence back onto chimera checked ones
-cd ../fastq_q25
+cd $DIR/2_quality_check/fastq_q25
 for i in *.fq
 do 
-	$RDP/thirdParty/usearch8.1.1831_i86linux64 -usearch_global $i -db ../chimera_removal/all_combined_q25_chim_denovo_ref_fullrdp_good.fa -strand plus -id 0.985 -matched ../final_good_seqs/"${i//.fq/}"_finalized.fa
+	$RDP/thirdParty/usearch8.1.1831_i86linux64 -usearch_global $i -db ../chimera_removal/combined_good.fa -strand plus -id 0.985 -matched ../final_good_seqs/"${i//.fq/}"_finalized.fa
 done
 
 # 4. clustering using cdhit
