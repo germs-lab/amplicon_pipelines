@@ -11,6 +11,8 @@ module load Java/1.7.0_51
 module load CDHIT/4.6.1
 module load R/2.15.1
 module load gparallel/20131022
+module load python
+module load Biopython/1.65
 
 cd /mnt/home/yangfan1/repos/amplicon_pipelines
 
