@@ -34,7 +34,7 @@ MAXLEN="280" ## maximum length of the assembled sequence
 ########################################################################
 # 1. create a list of sample names. find the sample name shared between R1 and R2.
 cd $DIR/original
-ls *.fastq > ../raw_seq_list.txt
+ls *.fastq* > ../raw_seq_list.txt
 
 cd $DIR
 rev raw_seq_list.txt | cut -d $FN_DELIM -f "$FN_REV_INDEX"- | rev | sort | uniq > sample_names.txt

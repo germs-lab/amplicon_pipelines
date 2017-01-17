@@ -14,10 +14,10 @@ This protocol describes the general procedure of amplicon sequence analysis proc
 General Procedures:   
 ------------------
 1. Use RDP's pandaseq (RDP_Assembler) to construct good quality full length sequences (assembled fastq).   
-2. Use RDPTools/SeqFilters to check barcodes quality and split them into different sample directories (ONLY barcodes need to be reverse complimented, sequences are in the correct orientation).   
-3. Bin assembled sequences into different sample files.   
-4. Check for chimeras using usearch (uclust and uchime)    
-5. For ITS, use usearch to pick OTU. For 16S, if you have weeks, use RDPToools/AlignmentTools to align sequences and then cluster using RDPTools/mcCluster. If you don't want to wait for weeks, use cd-hit for OTU picking.    
+2. Use RDPTools/SeqFilters to check barcodes quality and split them into different sample directories (ONLY barcodes need to be reverse complimented, sequences are in the correct orientation).  
+3. Combine all good quality sequences.     
+4. Check for chimeras using usearch (denovo and reference based)    
+5. For ITS, use usearch to pick OTU. For 16S, if you have weeks, use RDPToools/AlignmentTools to align sequences and then cluster using RDPTools/mcCluster (2 weeks for ~1 million unique sequences). If you don't want to wait for weeks, use cd-hit for OTU picking.    
 6. Once you have generated the representative sequences for each OTU, use RDPTools/Classifiers to identify taxonomy.    
 6. R for analysis     
 
@@ -33,7 +33,7 @@ Detailed Procedures:
 
     2. You could analyze your assembled read stat file by:
         ```
-        python ~/Documents/Fan/code/rdp_assem_stat_parser.py IGSB140210-1_assembled_stats.txt
+        python PATH/TO/amplicon_pipelines/rdp_assem_stat_parser.py IGSB140210-1_assembled_stats.txt
         ```
  
         You may need to modify the python script for different parameters.
