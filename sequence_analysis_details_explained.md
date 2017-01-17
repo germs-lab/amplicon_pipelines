@@ -15,6 +15,7 @@ General Procedures:
 ------------------
 1. Use RDP's pandaseq (RDP_Assembler) to construct good quality full length sequences (assembled fastq).   
 2. Use RDPTools/SeqFilters to check barcodes quality and split them into different sample directories (ONLY barcodes need to be reverse complimented, sequences are in the correct orientation).  
+3. Bin assembled sequences into different sample files.   
 3. Combine all good quality sequences.     
 4. Check for chimeras using usearch (denovo and reference based)    
 5. For ITS, use usearch to pick OTU. For 16S, if you have weeks, use RDPToools/AlignmentTools to align sequences and then cluster using RDPTools/mcCluster (2 weeks for ~1 million unique sequences). If you don't want to wait for weeks, use cd-hit for OTU picking.    

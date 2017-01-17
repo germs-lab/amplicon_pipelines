@@ -9,7 +9,7 @@
 ## python 2.7+, biopython
 
 DIR="/mnt/scratch/yangfan1/test/"
-CODE="/mnt/home/yangfan1/repos/amplicon_pipelines"
+CODE="/mnt/home/yangfan1/repos/amplicon_pipelines/code"
 RDP="/mnt/research/rdp/public"
 CHIMERA_DB="/mnt/scratch/yangfan1/databases/current_Bacteria_unaligned.fa"
 
