@@ -8,7 +8,8 @@
 ## prerequesit:
 ## python 2.7+, biopython
 
-DIR="/mnt/scratch/yangfan1/test/"
+DIR="/mnt/research/germs/soilcolumn16S2016_processed"
+ORI="/mnt/research/germs/soilcolumn16S2016_original"
 CODE="/mnt/home/yangfan1/repos/amplicon_pipelines/code"
 RDP="/mnt/research/rdp/public"
 CHIMERA_DB="/mnt/scratch/yangfan1/databases/current_Bacteria_unaligned.fa"
@@ -21,20 +22,20 @@ CHIMERA_DB="/mnt/scratch/yangfan1/databases/current_Bacteria_unaligned.fa"
 ## "_001.fastq" is the same portion after "R1" and "R2"
 FN_DELIM="_"   
 FN_REV_INDEX="3"
-FN_END="_001.fastq"  
+FN_END="_001.fastq.gz"  
 
 ## assemble paired-ends. The below parameters work well with bacterial 16S. 
 OVERLAP="10" ## minimal number of overlapped bases required for pair-end assembling. Not so critical if you set the length parameters (see below)
 Q="25" ## minimal read quality score.
-MINLEN="250" ## minimal length of the assembled sequence
-MAXLEN="280" ## maximum length of the assembled sequence
+MINLEN="250" #16s: "250" ## minimal length of the assembled sequence
+MAXLEN="280" #16s: "280" ## maximum length of the assembled sequence
 
 ########################################################################
 ### DO NOT change anything below unless you know what you are doing! ###
 ########################################################################
 # 1. create a list of sample names. find the sample name shared between R1 and R2.
-cd $DIR/original
-ls *.fastq* > ../raw_seq_list.txt
+cd $ORI
+ls *_R*.fastq* > $DIR/raw_seq_list.txt
 
 cd $DIR
 rev raw_seq_list.txt | cut -d $FN_DELIM -f "$FN_REV_INDEX"- | rev | sort | uniq > sample_names.txt
@@ -59,10 +60,8 @@ mkdir assembled stats
 
 while read i 
 do 
-	echo "$RDP/RDP_misc_tools/pandaseq/pandaseq -N -o $OVERLAP -e $Q -F -d rbfkms -l $MINLEN -L $MAXLEN -f $DIR/original/"$i""$FN_DELIM"R1"$FN_END" -r  $DIR/original/"$i""$FN_DELIM"R2"$FN_END" 1> assembled/"$i"_250-280.fastq 2> stats/"$i"_assembled_stats.txt"
-done < $DIR/sample_names.txt > rdp_assemble.sh
-
-cat rdp_assemble.sh | parallel -j 5
+	$RDP/RDP_misc_tools/pandaseq/pandaseq -N -o $OVERLAP -e $Q -F -d rbfkms -l $MINLEN -L $MAXLEN -f $DIR/original/"$i""$FN_DELIM"R1"$FN_END" -r  $DIR/original/"$i""$FN_DELIM"R2"$FN_END" 1> assembled/"$i"_150-263.fastq 2> stats/"$i"_assembled_stats.txt
+done < $DIR/sample_names.txt 
 
 wait
 
@@ -98,7 +97,7 @@ done
 
 wait
 
-#rm -r $DIR/2_quality_check/temp
+rm -r $DIR/2_quality_check/temp
 # convert fastq files to fasta files to be used for chimera checking
 cd $DIR/2_quality_check/fastq_q25 
 for i in *.fq 
@@ -146,10 +145,8 @@ wait
 cd $DIR/2_quality_check/fastq_q25
 for i in *.fq
 do 
-	echo "$RDP/thirdParty/usearch8.1.1831_i86linux64 -usearch_global $i -db ../chimera_removal/all_combined_q25_chim_ref.fa -strand plus -id 0.985 -matched ../final_good_seqs/"${i//.fq/}"_finalized.fa" 
-done > usearch_map.sh
-
-cat usearch_map.sh | parallel -j 5
+	$RDP/thirdParty/usearch8.1.1831_i86linux64 -usearch_global $i -db ../chimera_removal/all_combined_q25_chim_ref.fa -strand plus -id 0.985 -matched ../final_good_seqs/"${i//.fq/}"_finalized.fa 
+done 
 
 wait
 
