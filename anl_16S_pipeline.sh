@@ -48,3 +48,8 @@ python ~/repos/amplicon_pipelines/code/renaming_seq_w_short_sample_name.py ../..
 cd ../../4_cdhit_clustering/master_otus/
 cd-hit-est -i ../renamed_seqs/all_renamed_sequences.fa -o combined_renamed_seqs_cdhit.fasta -c 0.97 -M 200000 -T 16
 
+python ~/repos/amplicon_pipelines/code/cdhit_clstr_to_otu.py combined_renamed_seqs_cdhit.fasta.clstr ../R/cdhit_otu_table_wide.txt
+
+Rscript ~/repos/amplicon_pipelines/code/convert_otu_table_long_to_wide_format.R cdhit_otu_table_long.txt ../R/cdhit_otu_table_wide.txt
+
+java -Xmx24g -jar /mnt/research/rdp/public/RDPTools/classifier.jar classify -c 0.5 -f filterbyconf -o ../R/cdhit_otu_taxa_filterbyconf.txt -h cdhit_otu_taxa_filterbyconf_hierarchy.txt combined_renamed_seqs_cdhit.fasta
