@@ -53,3 +53,7 @@ python ~/repos/amplicon_pipelines/code/cdhit_clstr_to_otu.py combined_renamed_se
 Rscript ~/repos/amplicon_pipelines/code/convert_otu_table_long_to_wide_format.R cdhit_otu_table_long.txt ../R/cdhit_otu_table_wide.txt
 
 java -Xmx24g -jar /mnt/research/rdp/public/RDPTools/classifier.jar classify -c 0.5 -f filterbyconf -o ../R/cdhit_otu_taxa_filterbyconf.txt -h cdhit_otu_taxa_filterbyconf_hierarchy.txt combined_renamed_seqs_cdhit.fasta
+
+python ~/repos/amplicon_pipelines/code/rep_seq_to_otu_mapping.py combined_renamed_seqs_cdhit.fasta.clstr > combined_renamed_seqs_cdhit_rep_seq_to_cluster.map
+
+Rscript ~/repos/amplicon_pipelines/code/renaming_taxa_rep_seq_to_otus.R cdhit_otu_taxa_filterbyconf.txt combined_renamed_seqs_cdhit_rep_seq_to_cluster.map ../R/cdhit_taxa_table_w_repseq.txt
