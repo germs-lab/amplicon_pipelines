@@ -74,6 +74,8 @@ Author: Fan Yang
     ```
 
 **NOTE:**
+1. Sequences obtained from USDA and ANL do not contain primers, linkers, or adapters. 
+
 1. The qsub scripts contains all of the modules information need to be loaded if the pipelines are to be submitted as HPCC jobs.  
 
 2. Only the chimera part of the 16S pipeline needs to be submitted. Everything else can be run on a development note. 
