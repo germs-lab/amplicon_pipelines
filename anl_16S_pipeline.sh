@@ -1,10 +1,74 @@
+DIR= /mnt/research/germs/ANL_16s_may242017_R161209-1
+ORI= /mnt/research/germs/ANL_16s_may242017_R161209-1/original
+SUBPROJECT= jin fan maurilia
 
+CODE= /mnt/home/yangfan1/repos/amplicon_pipelines/code
+RDP= /mnt/research/rdp/public
+CHIMERA_DB= /mnt/home/yangfan1/databases/current_Bacteria_unaligned.fa
 
-mkdir 1_rdp_pandaseq
+VSEARCH= /mnt/research/germs/softwares/vsearch-2.4.3-linux-x86_64/bin/vsearch
 
-#/mnt/research/rdp/public/RDP_misc_tools/pandaseq/pandaseq -N -o 10 -e 25 -F -d rbfkms -f original/Undetermined_S0_L001_R1_001.fastq.gz -r original/Undetermined_S0_L001_R2_001.fastq.gz 1> assembled_reads_o10.fastq 2> assembled_reads_o10.stats
+## assemble paired-ends. The below parameters work well with bacterial 16S. 
+OVERLAP= 10## minimal number of overlapped bases required for pair-end assembling. Not so critical if you set the length parameters (see below)
+MINLEN= 250#16s: "250" ## minimal length of the assembled sequence
+MAXLEN= 280#16s: "280" ## maximum length of the assembled sequence
+Q= 25## minimal read quality score.
 
-/mnt/research/rdp/public/RDP_misc_tools/pandaseq/pandaseq -N -o 10 -e 25 -F -d rbfkms -l 250 -L 280 -f original/Undetermined_S0_L001_R1_001.fastq.gz -r original/Undetermined_S0_L001_R2_001.fastq.gz 1> assembled_reads_250-280.fastq 2> assembled_reads_250-280.stats
+all: sample_names.txt 1_rdp_pandaseq assemble 2_quality_check quality chimera_prep fq_to_fa combine_derep_sort chimera_denovo chimera_ref remapping 3_cdhit_clustering renaming clustering otu_table taxa_table
+
+assemblage: sample_names.txt 1_rdp_pandaseq assemble
+quality_check: 2_quality_check quality chimera_prep fq_to_fa combine_derep_sort chimera_denovo chimera_ref remapping
+cdhit_clustering: 3_cdhit_clustering renaming clustering otu_table taxa_table
+
+.PHONY: all cleaet 
+
+# 1. assemble pair-ended readsi using RDP pandaseq.
+1_rdp_pandaseq:
+	mkdir 1_rdp_pandaseq
+
+assemble:
+	cd $(DIR)/1_rdp_pandaseq && \
+	$(RDP)/RDP_misc_tools/pandaseq/pandaseq -N -o $(OVERLAP) -e $(Q) -F -d rbfkms -l $(MINLEN) -L $(MAXLEN) -f $(ORI)/*_R1_*.fastq.gz -r $(ORI)/*_R2_*.fastq.gz 1> assembled_reads_"$(MINLEN)"-"$(MAXLEN)".fastq 2> assembled_reads_"$(MINLEN)"-"$(MAXLEN)".stats
+
+# 2. check sequence quality.
+2_quality_check:
+	mkdir 2_quality_check 
+
+quality:
+	cd $(DIR)/1_rdp_pandaseq && \
+	java -jar $(RDP)/RDPTools/SeqFilters.jar -Q $(Q) -s assembled_reads_"$(MINLEN)"-"$(MAXLEN)".fastq  -o $(DIR)/2_quality_check -O assembled_reads_"$(MINLEN)"-"$(MAXLEN)".q25
+
+chimera_prep:
+	cd $(DIR)/2_quality_check && \
+	mv assembled_reads_"$(MINLEN)"-"$(MAXLEN)".q25/NoTag/NoTag_trimmed.fastq ../assembled_reads_"$(MINLEN)"-"$(MAXLEN)".q25.fq
+
+fq_to_fa:
+	cd $(DIR)/2_quality_check && \
+	python $(CODE)/fastq_to_fasta.py assembled_reads_"$(MINLEN)"-"$(MAXLEN)".q25.fq assembled_reads_"$(MINLEN)"-"$(MAXLEN)".q25.fa
+
+combine_derep_sort:
+	cd $(DIR)/2_quality_check/fasta_q25 && \
+	cat *.fa >> $(DIR)/2_quality_check/chimera_removal/all_combined_q25.fa
+	cd $(DIR)/2_quality_check/chimera_removal && \
+	$(VSEARCH) --derep_fulllength all_combined_q25.fa --output all_combined_q25_unique_sort_min2.fa --sizeout --minuniquesize 2
+
+chimera_denovo:
+	cd $(DIR)/2_quality_check/chimera_removal && \
+	$(VSEARCH) --uchime_denovo all_combined_q25_unique_sort_min2.fa --chimeras all_combined_q25_unique_sort_min2_denovo.chimera --nonchimeras all_combined_q25_unique_sort_min2_denovo.good
+
+## submitted: 256G mem, used 2 hours for 420773 unique sequences.
+chimera_ref:
+	cd $(DIR)/2_quality_check/chimera_removal && \
+	$(VSEARCH) --uchime_ref all_combined_q25_unique_sort_min2_denovo.good --nonchimeras all_combined_q25_unique_sort_min2_denovo_ref.good --db $(CHIMERA_DB)
+
+## submitted: 256G mem, used 2 hours for remapping.
+remapping:
+	cd $(DIR)/2_quality_check/fasta_q25 && \
+	for i in *.fa; do \
+		echo "$(VSEARCH) --usearch_global $$i --db $(DIR)/2_quality_check/chimera_removal/all_combined_q25_unique_sort_min2_denovo_ref.good --id 0.985 --matched $(DIR)/2_quality_check/final_good_seqs/"$$i"_finalized.fa"; \
+	done > $(DIR)/remapping.sh; \
+	true && \
+	cat $(DIR)/remapping.sh | parallel -j 4
 
 mkdir 2_quality_check
 
