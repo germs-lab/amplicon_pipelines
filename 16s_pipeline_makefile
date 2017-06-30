@@ -59,7 +59,7 @@ chimera_prep:
 		echo "mv $$i/NoTag/NoTag_trimmed.fastq ../fastq_q25/$${i//.fastq.q25/.q25}.fq"; \
 	done > $(DIR)/chimera_prep.sh; \
 	true && \
-	cat $(DIR)/chimera_prep.sh | parallel -j 4
+	cat $(DIR)/chimera_prep.sh | parallel -j 4 --delay 2
 	rm -r $(DIR)/2_quality_check/temp
 
 fq_to_fa:
