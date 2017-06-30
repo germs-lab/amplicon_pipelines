@@ -61,7 +61,13 @@ Author: Fan Yang
         + `DIR`: where processed sequences to be stored in.   
         + `ORI`: where the raw sequence files are.  
         + `SUBPROJECT`: the folder names you will create later to store samples from different projects in before clustering.   
-        + 
+        + `CODE`: the code directory in repository `amplicon_pipeline`.  
+	+ `RDP`: the directory where RDP's public tools are. Shouldn't need to change this.   
+	+ `CHIMERA_DB`: pathway to a 16S unaligned sequence database. I've been using RDP current release of unaligned bacterial 16S. 
+	+ `VSEARCH`: pathwy to software `vsearch`. Also, shouldn't need to change this.
+	+ `FN_DELIM`: the deliminators in your sequence file names that can be used to split the file names apart. 
+	+ `FN_REV_INDEX`: count from right hand side, the number that determines the part of the file names were the sanme for pair-ended reads. 
+
 ## Obsolete
 1. 16S pipeline in shell script using 64 bith usearch.aaa
     ```
