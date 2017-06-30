@@ -119,5 +119,5 @@ taxa_table:
 	Rscript $(CODE)/renaming_taxa_rep_seq_to_otus.R cdhit_otu_taxa_filterbyconf.txt combined_renamed_seqs_cdhit_rep_seq_to_cluster.map ../R/cdhit_taxa_table_w_repseq.txt
 
 clean:
-	cd $(DIR) && rm raw_seq_list.txt sample_names.txt assembling_script.sh quality_script.sh chimera_prep.sh remapping.sh && rm -r 1_rdp_pandaseq 2_quality_check 3_cdhit_clustering_$(SUBPROJECT)
+	cd $(DIR) && rm *.sh *.txt && rm -r 1_rdp_pandaseq 2_quality_check 3_cdhit_clustering_$(SUBPROJECT)
 #
