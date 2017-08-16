@@ -1,3 +1,5 @@
+SHELL:=/bin/bash
+
 DIR= /mnt/research/germs/STRIPS_16S_data
 ORI= /mnt/research/germs/STRIPS_16S_data/original
 SUBPROJECT= soilcosm
