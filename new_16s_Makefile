@@ -1,0 +1,30 @@
+3_cdhit_clustering:
+        mkdir $(DIR)/3_cdhit_clustering $(DIR)/3_cdhit_clustering/renamed_seqs $(DIR)/3_cdhit_clustering/master_otus $(DIR)/3_cdhit_clustering/R
+
+master:
+        cd $(DIR)/3_cdhit_clustering/master_otus && \
+        $(VSEARCH) --derep_fulllength $(DIR)/2_quality_check/denovo_ref/combined_denovo_ref.good --relabel "U_" --output relabeled_denovo_ref.good && \
+        $(CDHIT)/cd-hit-est -i relabeled_denovo_ref.good -o relabeled_denovo_ref_good_cdhit_97 -c 0.97 -M 200000 -T 16
+                
+renaming:
+        cd $(DIR)/2_quality_check/quality_trim && \
+        python $(CODE)/renaming_seq_w_short_sample_name.py "S_" $(DIR)/3_cdhit_clustering/renamed_seqs/sample_filename_map.txt $(DIR)/3_cdhit_clustering/renamed_seqs/sequence_name_map.txt *.fa > $(DIR)/3_cdhit_clustering/renamed_seqs/all_renamed_sequences.fa
+
+otu_mapping:
+        cd $(DIR)/3_cdhit_clustering/master_otus && \
+        $(CDHIT)/cd-hit-est-2d -i relabeled_denovo_ref_good_cdhit_97 -i2 ../renamed_seqs/all_renamed_sequences.fa -o otu_mapping_cdhit97 -c 0.97 -M 200000 -T 16
+
+otu_table:
+        cd $(DIR)/3_cdhit_clustering/master_otus && \
+        python $(CODE)/cdhit_otu_mapping.py otu_mapping_cdhit97.clstr > cdhit_otu_table_long.txt && \
+        Rscript $(CODE)/convert_otu_table_long_to_wide_format.R cdhit_otu_table_long.txt ../R/cdhit_otu_table_wide.txt && \
+        python $(CODE)/rep_seq_to_otu_mapping.py relabeled_denovo_ref_good_cdhit_97.clstr > rep_seq_to_cluster.map 
+
+taxa_table:
+        cd $(DIR)/3_cdhit_clustering/master_otus && \
+        java -Xmx24g -jar $(RDP)/classifier.jar classify -c 0.5 -f filterbyconf -o relabeled_denovo_ref_good_cdhit_97_taxa_filterbyconf.txt -h relabeled_denovo_ref_good_cdhit_97_taxa_filterbyconf_hierarchy.txt relabeled_denovo_ref_good_cdhit_97 && \
+        Rscript $(CODE)/renaming_taxa_rep_seq_to_otus.R relabeled_denovo_ref_good_cdhit_97_taxa_filterbyconf.txt rep_seq_to_cluster.map ../R/cdhit_taxa_table_w_repseq.txt
+        
+
+clean:
+        cd $(DIR) && rm *.sh *.txt && rm -r 1_rdp_pandaseq 2_quality_check 3_cdhit_clustering
